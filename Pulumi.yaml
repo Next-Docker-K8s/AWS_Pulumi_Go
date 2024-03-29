@@ -1,0 +1,5 @@
+name: next_kubernetes
+runtime: go
+description: A minimal AWS Go Pulumi program
+config:
+  vpc_name: Hello There
