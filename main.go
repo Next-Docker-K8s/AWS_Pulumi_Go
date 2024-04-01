@@ -1,8 +1,10 @@
 package main
 
 import (
+	"next_kubernetes/eks"
+	"next_kubernetes/iamroles"
 	"next_kubernetes/subnets"
-	vpc "next_kubernetes/vpc"
+	"next_kubernetes/vpc"
 
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi/config"
@@ -13,22 +15,42 @@ func main() {
 
 		cfg := config.New(ctx, "")
 
-		// Create an AWS resource (S3 Bucket)
-		// bucket, err := s3.NewBucket(ctx, "new-bucket-from-pulumi", nil)
-		// if err != nil {
-		// 	return err
-		// }
-
 		vpc, err := vpc.CreateVPC(ctx, cfg)
 
 		if err != nil {
 			return err
 		}
 
-		subnets.CreateSubnets(ctx, cfg, vpc)
+		subnets, errors := subnets.CreateSubnets(ctx, cfg, vpc)
 
-		// Export the name of the bucket
+		if errors[0] != nil{
+			return errors[0]
+		}
+
+		eksRole, err := iamroles.EKSRole(ctx)
+
+		if err != nil{
+			return err
+		}
+
+		ec2NodeRole, err := iamroles.CreateEC2Role(ctx)
+
+		if err != nil {
+			return err
+		}
+
+		eks_cluster, err := eks.CreateEKS(ctx, vpc, subnets, eksRole, ec2NodeRole)
+
+		if err != nil {
+			return err
+		}
+
 		ctx.Export("vpc name", vpc.ID())
+		ctx.Export("First Subnet", subnets[0].ID())
+		ctx.Export("EKS Name", eks_cluster.Name)
+
+		
 		return nil
+
 	})
 }
