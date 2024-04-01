@@ -1,8 +1,8 @@
 package main
 
 import (
-	iamroles "next_kubernetes/IAM_Roles"
 	"next_kubernetes/eks"
+	"next_kubernetes/iamroles"
 	"next_kubernetes/subnets"
 	"next_kubernetes/vpc"
 
